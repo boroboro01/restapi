@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -66,8 +67,31 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     /**
+     * It will save the expense details to database
+     * @param expenseDTO (expense dto)
+     * @return ExpenseDTO
+     */
+    @Override
+    public ExpenseDTO saveExpenseDetails(ExpenseDTO expenseDTO) {
+        ExpenseEntity newExpenseEntity = mapToExpenseEntity(expenseDTO);
+        newExpenseEntity.setExpenseId(UUID.randomUUID().toString());
+        newExpenseEntity = expenseRepository.save(newExpenseEntity);
+        log.info("Printing the expense entity details {}", newExpenseEntity);
+        return mapToExpenseDTO(newExpenseEntity);
+    }
+
+    /**
+     * Mapper method to map values from Expense dto to Expense entity
+     * @param expenseDTO (expense dto)
+     * @return ExpenseEntity
+     */
+    private ExpenseEntity mapToExpenseEntity(ExpenseDTO expenseDTO) {
+        return modelMapper.map(expenseDTO, ExpenseEntity.class);
+    }
+
+    /**
      * Fetch the expense by expense id from database
-     * @param expenseId
+     * @param expenseId (expense id)
      * @return expenseEntity
      */
     private ExpenseEntity getExpenseEntity(String expenseId) {
