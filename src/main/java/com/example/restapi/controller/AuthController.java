@@ -7,12 +7,15 @@ import com.example.restapi.io.ProfileRequest;
 import com.example.restapi.io.ProfileResponse;
 import com.example.restapi.service.CustomUserDetailsService;
 import com.example.restapi.service.ProfileService;
+import com.example.restapi.service.TokenBlacklistService;
 import com.example.restapi.util.JwtTokenUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -36,6 +39,8 @@ public class AuthController {
     private final JwtTokenUtil jwtTokenUtil;
 
     private final CustomUserDetailsService userDetailsService;
+
+    private final TokenBlacklistService tokenBlacklistService;
 
     /**
      * API endpoint to register new user
@@ -74,6 +79,23 @@ public class AuthController {
         } catch (BadCredentialsException e) {
 
         }
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PostMapping("/signout")
+    public void signout(HttpServletRequest request) {
+        String jwtToken = extractJwtTokenFromRequest(request);
+        if (jwtToken != null) {
+            tokenBlacklistService.addTokenToBlacklist(jwtToken);
+        }
+    }
+
+    private String extractJwtTokenFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 
     /**
